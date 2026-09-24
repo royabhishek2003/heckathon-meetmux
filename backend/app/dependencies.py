@@ -69,6 +69,7 @@ async def init_services():
             _neo4j_driver = AsyncGraphDatabase.driver(
                 settings.neo4j_uri,
                 auth=(settings.neo4j_user, settings.neo4j_password),
+                connection_timeout=2.0,
             )
             # Verify connectivity
             async with _neo4j_driver.session(database=settings.neo4j_database) as session:

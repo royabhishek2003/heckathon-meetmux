@@ -71,6 +71,10 @@ class XGBoostPredictionService(PredictionServiceBase):
 
         path = Path(model_path)
         if not path.exists():
+            backend_path = Path(__file__).resolve().parent.parent.parent / model_path
+            if backend_path.exists():
+                path = backend_path
+        if not path.exists():
             logger.warning("Model artifact not found at %s", model_path)
             return
 

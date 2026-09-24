@@ -15,18 +15,57 @@ const LOCATION_ICONS: Record<string, string> = {
 
 export type TileStyle = 'dark' | 'osm' | 'satellite';
 
-const TILE_PROVIDERS: Record<TileStyle, { url: string; attribution: string }> = {
+interface TileLayerDef {
+  url: string;
+  options: L.TileLayerOptions;
+}
+
+const TILE_PROVIDERS: Record<TileStyle, { layers: TileLayerDef[] }> = {
   dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    layers: [
+      {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+          maxZoom: 19,
+          maxNativeZoom: 16,
+        },
+      },
+      {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: '',
+          maxZoom: 19,
+          maxNativeZoom: 16,
+          pane: 'tilePane',
+        },
+      },
+    ],
   },
   osm: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    layers: [
+      {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+          maxNativeZoom: 19,
+          subdomains: 'abc', // OSM only supports subdomains a, b, c. Subdomain d does not exist and causes 25% black tiles!
+        },
+      },
+    ],
   },
   satellite: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+    layers: [
+      {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and GIS User Community',
+          maxZoom: 19,
+          maxNativeZoom: 18,
+        },
+      },
+    ],
   },
 };
 
@@ -44,6 +83,8 @@ interface MapViewProps {
   // Interactive manual click props
   manualModeActive?: boolean;
   onMapClickSetPoint?: (type: 'origin' | 'destination', coords: Coordinates) => void;
+  // Top HUD content
+  topHud?: React.ReactNode;
 }
 
 // Calculate bearing between two points
@@ -114,10 +155,11 @@ export default function MapView({
   followVehicle = false,
   manualModeActive = false,
   onMapClickSetPoint,
+  topHud,
 }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const tileLayersRef = useRef<L.TileLayer[]>([]);
   const layersRef = useRef<L.LayerGroup>(L.layerGroup());
   const vehicleMarkerRef = useRef<L.Marker | null>(null);
 
@@ -130,19 +172,23 @@ export default function MapView({
     const map = mapRef.current;
     if (!map) return;
 
-    if (tileLayerRef.current) {
-      map.removeLayer(tileLayerRef.current);
-    }
+    tileLayersRef.current.forEach((layer) => {
+      map.removeLayer(layer);
+    });
+    tileLayersRef.current = [];
 
     const provider = TILE_PROVIDERS[style];
-    const newLayer = L.tileLayer(provider.url, {
-      attribution: provider.attribution,
-      maxZoom: 19,
-      subdomains: 'abcd',
-    }).addTo(map);
+    const newLayers = provider.layers.map((def) => {
+      const layer = L.tileLayer(def.url, def.options);
+      layer.addTo(map);
+      return layer;
+    });
 
-    tileLayerRef.current = newLayer;
+    tileLayersRef.current = newLayers;
     setTileStyle(style);
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 50);
   }, []);
 
   // Initialize Map
@@ -159,17 +205,30 @@ export default function MapView({
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     const provider = TILE_PROVIDERS.dark;
-    const initialTile = L.tileLayer(provider.url, {
-      attribution: provider.attribution,
-      maxZoom: 19,
-      subdomains: 'abcd',
-    }).addTo(map);
-    tileLayerRef.current = initialTile;
+    const initialLayers = provider.layers.map((def) => {
+      const layer = L.tileLayer(def.url, def.options);
+      layer.addTo(map);
+      return layer;
+    });
+    tileLayersRef.current = initialLayers;
 
     layersRef.current.addTo(map);
     mapRef.current = map;
 
+    // Automatic resize listener to ensure Leaflet never misaligns viewport
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
+      tileLayersRef.current.forEach((layer) => {
+        map.removeLayer(layer);
+      });
+      tileLayersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
@@ -385,8 +444,8 @@ export default function MapView({
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Map Interactive HUD Toolbar */}
+    <div className="map-view-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      {/* Top-Right Map Controls Toolbar */}
       <div className="map-hud-toolbar">
         {/* Tile Provider Switcher */}
         <div className="map-hud-btn-group">
@@ -424,6 +483,13 @@ export default function MapView({
         </button>
       </div>
 
+      {/* Bottom-Left Route Telemetry Card */}
+      {topHud && (
+        <div className="map-bottom-hud animate-fade-in">
+          {topHud}
+        </div>
+      )}
+
       {/* Manual Pin Click Instructions Banner */}
       {manualModeActive && (
         <div className="map-click-helper animate-fade-in">
@@ -437,7 +503,11 @@ export default function MapView({
       )}
 
       {/* Leaflet container */}
-      <div ref={containerRef} className="map-container" style={{ width: '100%', height: '100%' }} />
+      <div
+        ref={containerRef}
+        className={`map-canvas map-canvas--${tileStyle}`}
+        style={{ width: '100%', height: '100%' }}
+      />
     </div>
   );
 }

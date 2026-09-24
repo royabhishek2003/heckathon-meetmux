@@ -498,78 +498,7 @@ export default function App() {
 
         {/* Right Area: Interactive Map & Live HUD */}
         <main className="map-container">
-          {/* Quick HUD overlay over the map */}
-          {selectedRoute && (
-            <div className="map-top-hud animate-fade-in">
-              <div>
-                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
-                  Active Route
-                </div>
-                <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  Route {routes.findIndex((r) => r.id === selectedRoute.id) + 1} of {routes.length}
-                </div>
-              </div>
-
-              <div style={{ height: 28, width: 1, background: 'var(--color-border)' }} />
-
-              <div>
-                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
-                  Distance
-                </div>
-                <div style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                  {selectedRoute.distance_km.toFixed(1)} km
-                </div>
-              </div>
-
-              <div style={{ height: 28, width: 1, background: 'var(--color-border)' }} />
-
-              <div>
-                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
-                  Est. Travel Time
-                </div>
-                <div style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                  {(selectedRoute.duration_minutes / 60).toFixed(1)} hrs
-                </div>
-              </div>
-
-              {selectedRoute.risk && (
-                <>
-                  <div style={{ height: 28, width: 1, background: 'var(--color-border)' }} />
-                  <div>
-                    <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
-                      Delay Risk
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className={`badge badge--risk-${selectedRoute.risk.risk_band}`}>
-                        {selectedRoute.risk.risk_band}
-                      </span>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                        ({(selectedRoute.risk.probability * 100).toFixed(0)}%)
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Quick Play/Pause Simulator Shortcut on Map */}
-              <div style={{ height: 28, width: 1, background: 'var(--color-border)' }} />
-              <div>
-                <button
-                  type="button"
-                  className={`btn btn--sm ${simulationPlaying ? 'btn--accent' : 'btn--primary'}`}
-                  style={{ fontSize: '11px', padding: '4px 10px', fontWeight: 600 }}
-                  onClick={() => {
-                    setActiveTab('simulation');
-                    setSimulationPlaying(!simulationPlaying);
-                  }}
-                >
-                  {simulationPlaying ? '⏸️ Pause Sim' : '▶️ Play Sim'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Interactive Map View */}
+          {/* Interactive Map View with Integrated Top HUD & Controls */}
           <MapView
             origin={activeOrigin}
             destination={activeDest}
@@ -583,6 +512,67 @@ export default function App() {
             simulationProgress={simulationProgress}
             simulationPlaying={simulationPlaying}
             followVehicle={followVehicle}
+            topHud={
+              selectedRoute ? (
+                <>
+                  <div className="hud-metric">
+                    <span className="hud-metric__label">Active Route</span>
+                    <span className="hud-metric__value">
+                      Route {routes.findIndex((r) => r.id === selectedRoute.id) + 1} of {routes.length}
+                    </span>
+                  </div>
+
+                  <div className="hud-divider" />
+
+                  <div className="hud-metric">
+                    <span className="hud-metric__label">Distance</span>
+                    <span className="hud-metric__value">{selectedRoute.distance_km.toFixed(1)} km</span>
+                  </div>
+
+                  <div className="hud-divider" />
+
+                  <div className="hud-metric">
+                    <span className="hud-metric__label">Est. Time</span>
+                    <span className="hud-metric__value">
+                      {(selectedRoute.duration_minutes / 60).toFixed(1)} hrs
+                    </span>
+                  </div>
+
+                  {selectedRoute.risk && (
+                    <>
+                      <div className="hud-divider" />
+                      <div className="hud-metric">
+                        <span className="hud-metric__label">Delay Risk</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span className={`badge badge--risk-${selectedRoute.risk.risk_band}`}>
+                            {selectedRoute.risk.risk_band.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: '11px', fontWeight: 700 }}>
+                            ({(selectedRoute.risk.probability * 100).toFixed(0)}%)
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="hud-divider" />
+
+                  <div>
+                    <button
+                      type="button"
+                      className={`btn btn--sm ${simulationPlaying ? 'btn--accent' : 'btn--primary'}`}
+                      style={{ fontSize: '11px', padding: '4px 10px', fontWeight: 600, whiteSpace: 'nowrap' }}
+                      onClick={() => {
+                        setActiveTab('simulation');
+                        setSimulationPlaying(!simulationPlaying);
+                      }}
+                    >
+                      {simulationPlaying ? '⏸️ Pause' : '▶️ Play Sim'}
+                    </button>
+                  </div>
+                </>
+              ) : undefined
+            }
             manualModeActive={selectorMode === 'manual'}
             onMapClickSetPoint={handleMapClickSetPoint}
           />

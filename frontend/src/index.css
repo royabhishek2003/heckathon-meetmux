@@ -130,16 +130,31 @@ body {
 
 /* ── Typography ───────────────────────────────────────── */
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
-h1 { font-size: var(--text-2xl); }
-h2 { font-size: var(--text-xl); }
-h3 { font-size: var(--text-lg); }
-h4 { font-size: var(--text-base); font-weight: 500; }
+h1 {
+  font-size: var(--text-2xl);
+}
+
+h2 {
+  font-size: var(--text-xl);
+}
+
+h3 {
+  font-size: var(--text-lg);
+}
+
+h4 {
+  font-size: var(--text-base);
+  font-weight: 500;
+}
 
 a {
   color: var(--color-accent);
@@ -239,18 +254,27 @@ a:hover {
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: calc(100vh - var(--header-height));
 }
 
 /* ── Sidebar ──────────────────────────────────────────── */
 
 .sidebar {
   width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100%;
   background: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
 }
 
 .sidebar__section {
@@ -277,19 +301,56 @@ a:hover {
 
 .map-container {
   flex: 1;
+  min-width: 0;
+  height: 100%;
   position: relative;
-  background: var(--color-bg-primary);
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.map-view-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .map-container .leaflet-container {
   width: 100%;
   height: 100%;
-  background: var(--color-bg-primary);
+  background: #0f172a;
+  transition: background 0.3s ease;
 }
 
-/* Dark map tile adjustments */
+/* Seamless map background colors per active style */
+.map-canvas--dark .leaflet-container,
+.map-canvas--dark {
+  background: #111827 !important;
+}
+
+.map-canvas--osm .leaflet-container,
+.map-canvas--osm {
+  background: #aad3df !important; /* Ocean blue matching OSM water */
+}
+
+.map-canvas--satellite .leaflet-container,
+.map-canvas--satellite {
+  background: #0b1120 !important;
+}
+
+/* Clear tile pane filter so Street and Satellite maps render with true vibrant colors */
 .map-container .leaflet-tile-pane {
-  filter: brightness(0.85) contrast(1.1) saturate(0.8);
+  filter: none;
 }
 
 .map-container .leaflet-control-zoom {
@@ -544,7 +605,9 @@ a:hover {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {
@@ -606,32 +669,72 @@ a:hover {
   transition: width var(--transition-slow);
 }
 
-.risk-meter__fill--low { background: var(--color-risk-low); }
-.risk-meter__fill--medium { background: var(--color-risk-medium); }
-.risk-meter__fill--high { background: var(--color-risk-high); }
-.risk-meter__fill--critical { background: var(--color-risk-critical); }
+.risk-meter__fill--low {
+  background: var(--color-risk-low);
+}
+
+.risk-meter__fill--medium {
+  background: var(--color-risk-medium);
+}
+
+.risk-meter__fill--high {
+  background: var(--color-risk-high);
+}
+
+.risk-meter__fill--critical {
+  background: var(--color-risk-critical);
+}
 
 /* ── Route Colors ─────────────────────────────────────── */
 
-.route-color-1 { color: #3b82f6; }
-.route-color-2 { color: #8b5cf6; }
-.route-color-3 { color: #06b6d4; }
+.route-color-1 {
+  color: #3b82f6;
+}
+
+.route-color-2 {
+  color: #8b5cf6;
+}
+
+.route-color-3 {
+  color: #06b6d4;
+}
 
 /* ── Animations ───────────────────────────────────────── */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .animate-fade-in {
@@ -812,9 +915,20 @@ a:hover {
 }
 
 @keyframes pulse-glow {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 .telemetry-grid {
@@ -915,44 +1029,76 @@ a:hover {
   background: #f59e0b;
   color: #000;
 }
+
 .btn--accent:hover {
   background: #d97706;
 }
 
-/* ── Floating Map Top HUD ────────────────────────────── */
-.map-top-hud {
+/* ── Floating Top-Right Map Toolbar ──────────────────── */
+.map-hud-toolbar {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  right: 14px;
   z-index: 1000;
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-md);
-  padding: 10px 18px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  gap: 8px;
   pointer-events: auto;
+}
+
+/* ── Floating Bottom-Left Route Telemetry Card ───────── */
+.map-bottom-hud {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+  pointer-events: auto;
+  max-width: calc(100% - 140px);
+}
+
+.hud-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-metric__label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.hud-metric__value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.hud-divider {
+  height: 24px;
+  width: 1px;
+  background: var(--color-border);
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
-  .map-top-hud {
+  .map-bottom-hud {
     display: none;
   }
-}
-
-/* ── Floating Map Toolbar ────────────────────────────── */
-.map-hud-toolbar {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
 }
 
 .map-hud-btn-group {
@@ -1042,8 +1188,15 @@ a:hover {
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }
 
 /* Animated Simulation Truck Marker */
@@ -1142,4 +1295,3 @@ a:hover {
 .toast--warning {
   border-left: 4px solid var(--color-risk-medium);
 }
-

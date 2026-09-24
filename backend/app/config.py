@@ -7,6 +7,11 @@ import os
 from dataclasses import dataclass, field
 from typing import List
 
+from dotenv import find_dotenv, load_dotenv
+
+# Load .env configuration
+load_dotenv(find_dotenv(usecwd=True))
+
 
 def _parse_cors_origins(raw: str) -> List[str]:
     """Parse CORS origins from env – accepts JSON array or comma-separated."""
