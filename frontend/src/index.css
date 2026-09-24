@@ -373,6 +373,7 @@ a:hover {
 .btn--primary {
   background: var(--color-accent);
   color: white;
+  border-color: #60a5fa;
 }
 
 .btn--primary:hover {
