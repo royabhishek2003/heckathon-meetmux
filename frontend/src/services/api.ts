@@ -12,7 +12,10 @@ import type {
   ShipmentNetworkResponse,
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const envBase = (import.meta.env.VITE_API_BASE_URL || '').trim();
+const API_BASE = envBase
+  ? (envBase.startsWith('http://') || envBase.startsWith('https://') ? envBase : `https://${envBase}`).replace(/\/+$/, '')
+  : '';
 
 class ApiError extends Error {
   status: number;

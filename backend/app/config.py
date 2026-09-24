@@ -85,7 +85,7 @@ class Settings:
             debug=_bool("APP_DEBUG", False),
             secret_key=_env("APP_SECRET_KEY", "change-me-to-a-random-secret"),
             host=_env("BACKEND_HOST", "0.0.0.0"),
-            port=_int("BACKEND_PORT", 8000),
+            port=_int("PORT", _int("BACKEND_PORT", 8000)),
             cors_origins=_parse_cors_origins(
                 _env("BACKEND_CORS_ORIGINS", '["http://localhost:5173"]')
             ),
