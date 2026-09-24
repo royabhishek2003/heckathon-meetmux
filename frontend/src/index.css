@@ -1096,9 +1096,34 @@ a:hover {
 }
 
 @media (max-width: 768px) {
-  .map-bottom-hud {
+  .map-bottom-hud,
+  .map-top-helper {
     display: none;
   }
+}
+
+/* ── Floating Top-Center Custom Route Helper Pill ────── */
+.map-top-helper {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  white-space: nowrap;
 }
 
 .map-hud-btn-group {
@@ -1133,22 +1158,7 @@ a:hover {
   font-weight: 600;
 }
 
-/* ── Map Click Helper ─────────────────────────────────── */
-.map-click-helper {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--color-accent);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  pointer-events: auto;
-}
+
 
 /* ── Custom Map Pins & Vehicle Animation ──────────────── */
 .custom-pin-container {

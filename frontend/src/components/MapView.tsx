@@ -309,10 +309,10 @@ export default function MapView({
       bounds.push(...latlngs);
     });
 
-    // Origin Marker (Pulsing Green Pin)
+    // Origin Marker (Pulsing Green Pin - Draggable)
     if (origin) {
       const originIcon = L.divIcon({
-        html: `<div class="pin-marker pin-marker--origin">
+        html: `<div class="pin-marker pin-marker--origin" style="cursor: grab;" title="Drag pin to reposition Origin">
                  <div class="pin-marker__ring"></div>
                  <div class="pin-marker__core">📍</div>
                </div>`,
@@ -320,16 +320,28 @@ export default function MapView({
         iconSize: [32, 32],
         iconAnchor: [16, 30],
       });
-      const marker = L.marker([origin.lat, origin.lon], { icon: originIcon });
-      marker.bindPopup('<div class="map-popup__title">🟢 Origin Departure Point</div>');
+      const marker = L.marker([origin.lat, origin.lon], {
+        icon: originIcon,
+        draggable: true,
+      });
+      marker.bindPopup(
+        '<div class="map-popup__title">🟢 Origin Departure Point</div><div class="map-popup__detail" style="color: #94a3b8; font-size: 11px;">✋ Drag pin to reposition origin & recalculate route</div>'
+      );
+      marker.on('dragend', (e) => {
+        const latlng = (e.target as L.Marker).getLatLng();
+        onMapClickSetPoint?.('origin', {
+          lat: Number(latlng.lat.toFixed(5)),
+          lon: Number(latlng.lng.toFixed(5)),
+        });
+      });
       marker.addTo(layers);
       bounds.push([origin.lat, origin.lon]);
     }
 
-    // Destination Marker (Pulsing Red Pin)
+    // Destination Marker (Pulsing Red Pin - Draggable)
     if (destination) {
       const destIcon = L.divIcon({
-        html: `<div class="pin-marker pin-marker--dest">
+        html: `<div class="pin-marker pin-marker--dest" style="cursor: grab;" title="Drag pin to reposition Destination">
                  <div class="pin-marker__ring"></div>
                  <div class="pin-marker__core">🏁</div>
                </div>`,
@@ -337,8 +349,20 @@ export default function MapView({
         iconSize: [32, 32],
         iconAnchor: [16, 30],
       });
-      const marker = L.marker([destination.lat, destination.lon], { icon: destIcon });
-      marker.bindPopup('<div class="map-popup__title">🔴 Destination Arrival Point</div>');
+      const marker = L.marker([destination.lat, destination.lon], {
+        icon: destIcon,
+        draggable: true,
+      });
+      marker.bindPopup(
+        '<div class="map-popup__title">🔴 Destination Arrival Point</div><div class="map-popup__detail" style="color: #94a3b8; font-size: 11px;">✋ Drag pin to reposition destination & recalculate route</div>'
+      );
+      marker.on('dragend', (e) => {
+        const latlng = (e.target as L.Marker).getLatLng();
+        onMapClickSetPoint?.('destination', {
+          lat: Number(latlng.lat.toFixed(5)),
+          lon: Number(latlng.lng.toFixed(5)),
+        });
+      });
       marker.addTo(layers);
       bounds.push([destination.lat, destination.lon]);
     }
@@ -490,17 +514,18 @@ export default function MapView({
         </div>
       )}
 
-      {/* Manual Pin Click Instructions Banner */}
+      {/* Top-Center Instruction Pill when in Custom Route Mode */}
       {manualModeActive && (
-        <div className="map-click-helper animate-fade-in">
+        <div className="map-top-helper animate-fade-in">
           <span>
-            👉 <strong>Click anywhere on map</strong> to place{' '}
-            <span style={{ color: nextManualClick === 'origin' ? '#22c55e' : '#ef4444', fontWeight: 700 }}>
-              {nextManualClick.toUpperCase()} ({nextManualClick === 'origin' ? 'Origin 🟢' : 'Destination 🔴'})
-            </span>
+            👉 Click map or drag pins to set{' '}
+            <strong style={{ color: nextManualClick === 'origin' ? '#22c55e' : '#ef4444' }}>
+              {nextManualClick === 'origin' ? 'Origin 🟢' : 'Destination 🔴'}
+            </strong>
           </span>
         </div>
       )}
+
 
       {/* Leaflet container */}
       <div

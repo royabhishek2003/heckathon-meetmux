@@ -184,19 +184,23 @@ export default function App() {
     }
   }
 
-  // Handle click on map to set points
+  // Handle click on map or dragging pins to set points
   function handleMapClickSetPoint(type: 'origin' | 'destination', coords: Coordinates) {
     if (type === 'origin') {
       setManualOrigin(coords);
-      addToast(`Set Origin to [${coords.lat}, ${coords.lon}] 🟢`, 'info');
-      if (manualDest) {
-        handleManualRoute(coords, manualDest);
+      const currentDest = manualDest || (selectedShipment ? selectedShipment.destination.coordinates : null);
+      addToast(`Origin updated to [${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}] 🟢`, 'info');
+      if (currentDest) {
+        setSelectorMode('manual');
+        handleManualRoute(coords, currentDest);
       }
     } else {
       setManualDest(coords);
-      addToast(`Set Destination to [${coords.lat}, ${coords.lon}] 🔴`, 'info');
-      if (manualOrigin) {
-        handleManualRoute(manualOrigin, coords);
+      const currentOrigin = manualOrigin || (selectedShipment ? selectedShipment.origin.coordinates : null);
+      addToast(`Destination updated to [${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}] 🔴`, 'info');
+      if (currentOrigin) {
+        setSelectorMode('manual');
+        handleManualRoute(currentOrigin, coords);
       }
     }
   }
